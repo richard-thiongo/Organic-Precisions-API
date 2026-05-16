@@ -1,5 +1,5 @@
-const app = require('./app');
-const { pool } = require('./shared/config/db');
+const app = require('./src/app');
+const { pool } = require('./src/shared/config/db');
 
 const PORT = process.env.PORT || 5000;
 

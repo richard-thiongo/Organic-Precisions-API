@@ -7,6 +7,7 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false }, // Required for Supabase connections
   max: 50, // Increased maximum number of clients for high traffic
   idleTimeoutMillis: 3600000, // Close idle clients after 1 hour (was 30s)
   connectionTimeoutMillis: 5000, // Return an error if a connection takes longer than 5 seconds

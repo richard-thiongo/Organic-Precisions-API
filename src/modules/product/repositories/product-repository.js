@@ -22,7 +22,8 @@ const ProductRepository = {
           '[]'
         ) as variants
       FROM products p
-      LEFT JOIN product_details pd ON p.product_id = pd.product_id
+      LEFT JOIN product_details pd ON p.product_id = pd.product_id AND pd.is_deleted = false
+      WHERE p.is_deleted = false
       GROUP BY p.product_id
     `;
     const { rows } = await db.query(query);
@@ -103,9 +104,9 @@ const ProductRepository = {
     return rows[0];
   },
 
-  // Delete a product (cascades to product_details)
+  // Delete a product (soft delete)
   async deleteProduct(product_id, client) {
-    const query = 'DELETE FROM products WHERE product_id = $1 RETURNING *';
+    const query = 'UPDATE products SET is_deleted = true WHERE product_id = $1 RETURNING *';
     const { rows } = client ? await client.query(query, [product_id]) : await db.query(query, [product_id]);
     return rows[0];
   },

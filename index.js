@@ -1,7 +1,7 @@
 const app = require('./src/app');
 const { pool } = require('./src/shared/config/db');
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 const startServer = async () => {
   try {

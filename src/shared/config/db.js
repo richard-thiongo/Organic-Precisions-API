@@ -19,8 +19,10 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  console.error('Unexpected error on idle client:', err.message);
+  // Note: We do NOT call process.exit(-1) here.
+  // Supabase connection poolers aggressively close idle connections, raising ECONNRESET.
+  // The 'pg' pool will automatically drop the dead connection and create a new one when needed.
 });
 
 module.exports = {

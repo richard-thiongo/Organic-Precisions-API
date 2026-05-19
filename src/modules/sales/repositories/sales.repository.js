@@ -113,6 +113,60 @@ class SalesRepository {
       topProducts: productsRes.rows
     };
   }
+
+  /**
+   * Fetch reports for a specific date or date range
+   */
+  async getReportsByDateRange(startDate, endDate) {
+    // 1. Get Aggregated totals
+    const totalsQuery = `
+      SELECT 
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COUNT(id) as total_sales_count
+      FROM sales 
+      WHERE created_at::date >= $1::date AND created_at::date <= $2::date
+    `;
+
+    // 2. Get Sales Records with their nested items
+    const recordsQuery = `
+      SELECT 
+        s.id as sale_id,
+        s.total_amount,
+        s.created_at as sale_date,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'item_id', si.id,
+                'product_name', p.product_name,
+                'variant_details', pd.measurement_value || ' ' || pd.measurement_unit,
+                'quantity', si.quantity,
+                'unit_price', si.unit_price,
+                'subtotal', si.subtotal
+              )
+            )
+            FROM sale_items si
+            JOIN product_details pd ON si.variant_id = pd.variant_id
+            JOIN products p ON pd.product_id = p.product_id
+            WHERE si.sale_id = s.id
+          ), '[]'::json
+        ) as items
+      FROM sales s
+      WHERE s.created_at::date >= $1::date AND s.created_at::date <= $2::date
+      ORDER BY s.created_at DESC
+    `;
+
+    const [totalsRes, recordsRes] = await Promise.all([
+      pool.query(totalsQuery, [startDate, endDate]),
+      pool.query(recordsQuery, [startDate, endDate])
+    ]);
+
+    return {
+      totalRevenue: parseFloat(totalsRes.rows[0].total_revenue),
+      totalSalesCount: parseInt(totalsRes.rows[0].total_sales_count, 10),
+      salesRecords: recordsRes.rows
+    };
+  }
 }
 
 module.exports = new SalesRepository();

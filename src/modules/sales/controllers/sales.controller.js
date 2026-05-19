@@ -49,6 +49,28 @@ class SalesController {
       res.status(500).json({ status: 'error', message: 'Failed to retrieve stats' });
     }
   }
+  /**
+   * Handle Reports Retrieval by Date Range
+   */
+  async getReports(req, res) {
+    try {
+      const { start_date, end_date } = req.query;
+
+      if (!start_date) {
+        return res.status(400).json({ status: 'error', message: 'start_date query parameter is required' });
+      }
+
+      const reports = await salesService.getReports(start_date, end_date);
+      
+      res.status(200).json({
+        status: 'success',
+        data: reports
+      });
+    } catch (err) {
+      console.error('Reports error:', err.message);
+      res.status(500).json({ status: 'error', message: 'Failed to retrieve reports' });
+    }
+  }
 }
 
 module.exports = new SalesController();
